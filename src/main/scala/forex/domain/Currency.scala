@@ -1,10 +1,13 @@
 package forex.domain
 
 import cats.Show
+import enumeratum._
 
-sealed trait Currency
+sealed trait Currency extends EnumEntry
 
-object Currency {
+object Currency extends Enum[Currency] {
+  val values = findValues
+
   case object AUD extends Currency
   case object CAD extends Currency
   case object CHF extends Currency
@@ -15,28 +18,13 @@ object Currency {
   case object SGD extends Currency
   case object USD extends Currency
 
-  implicit val show: Show[Currency] = Show.show {
-    case AUD => "AUD"
-    case CAD => "CAD"
-    case CHF => "CHF"
-    case EUR => "EUR"
-    case GBP => "GBP"
-    case NZD => "NZD"
-    case JPY => "JPY"
-    case SGD => "SGD"
-    case USD => "USD"
-  }
+  implicit val show: Show[Currency] = Show.show(_.entryName)
 
-  def fromString(s: String): Currency = s.toUpperCase match {
-    case "AUD" => AUD
-    case "CAD" => CAD
-    case "CHF" => CHF
-    case "EUR" => EUR
-    case "GBP" => GBP
-    case "NZD" => NZD
-    case "JPY" => JPY
-    case "SGD" => SGD
-    case "USD" => USD
+  val allPossiblePairs: Set[Rate.Pair] = {
+    values.combinations(2)
+          .flatMap(_.permutations)
+          .collect {
+           case Seq(from: Currency, to: Currency) => new Rate.Pair(from, to) 
+          }.toSet
   }
-
 }
